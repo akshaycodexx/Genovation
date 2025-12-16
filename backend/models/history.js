@@ -1,10 +1,9 @@
 const mongoose=require("mongoose");
 
-
-const todoSchema= new mongoose.Schema({
-    text:{
+const PromptSchema=new mongoose.Schema({
+    chat:{
         type:String,
-        required:true,
+        required:true
     },
     user:{
         type:mongoose.Schema.Types.ObjectId,
@@ -12,4 +11,4 @@ const todoSchema= new mongoose.Schema({
         required:true
     }
 })
-module.exports=mongoose.model("Todo",todoSchema);
+module.exports=mongoose.model("prompt",PromptSchema);

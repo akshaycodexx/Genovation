@@ -3,9 +3,11 @@ import axios from 'axios'
 import { useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 
 function Login() {
+   const Navigate=useNavigate();
     const [formdata,setFormdata]=useState({
         email:"",
         password:""
@@ -33,6 +35,7 @@ const handleSubmit=async(e)=>{
             email:"",
             password:""
         });
+        Navigate("/chat")
         
     } catch (error) {
         console.log("Login Failed",error);
