@@ -1,13 +1,11 @@
-const authController=require("../controllers/userController");
-const express=require("express");
-const router=express.Router();
-const AuthMiddleware=require("../middlewares/Auth");
-const multer = require("multer");
-const upload = multer();
+const authController = require("../controllers/userController");
+const express = require("express");
+const router = express.Router();
+const AuthMiddleware = require("../middlewares/Auth");
 
-router.post("/register",upload.none(),authController.Signup);
-router.post("/login",upload.none(),authController.login);
-router.get("/me",AuthMiddleware,authController.profile);
-router.post("/logout",AuthMiddleware,authController.logout);
+router.post("/register", authController.Signup);
+router.post("/login", authController.login);
+router.post("/logout", authController.logout);
+router.get("/profile", AuthMiddleware, authController.profile);
 
-module.exports=router;
+module.exports = router;
