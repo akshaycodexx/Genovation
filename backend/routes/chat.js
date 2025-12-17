@@ -4,7 +4,15 @@ const Message = require("../models/Message");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const AuthMiddleware = require("../middlewares/Auth");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.error("CRITICAL ERROR: GEMINI_API_KEY is missing from .env file.");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
 
 router.get("/", AuthMiddleware, async (req, res) => {
   try {
@@ -17,6 +25,7 @@ router.get("/", AuthMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 router.post("/", AuthMiddleware, async (req, res) => {
   try {
@@ -33,28 +42,48 @@ router.post("/", AuthMiddleware, async (req, res) => {
 
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro", 
+      model: "gemini-2.0-flash",
     });
 
-    let reply = "No reply from AI";
+    let reply = "";
 
     try {
+
       const result = await model.generateContent(text);
-      reply = result.response.text();
+      const response = await result.response;
+
+
+      reply = response.text();
+
+      if (!reply) {
+        reply = "AI generated an empty response (possibly blocked by safety filters).";
+      }
     } catch (err) {
-      console.error("Gemini API Error:", err.message);
-      reply = "AI service is temporarily unavailable. Please try again later.";
+
+      console.error("--- Gemini API Error Details ---");
+      console.error("Message:", err.message);
+
+      if (err.message.includes("429")) {
+        reply = "AI Error: Rate limit exceeded (too many requests).";
+      } else if (err.message.includes("403")) {
+        reply = "AI Error: Access denied (check API key or region).";
+      } else if (err.message.includes("API key not valid")) {
+        reply = "AI Error: Your API key is invalid.";
+      } else {
+        reply = `AI Error: ${err.message}`;
+      }
     }
+
 
     const savedMessage = await Message.create({
       user: req.user._id,
       message: text,
-      reply,
+      reply: reply,
     });
 
     res.json(savedMessage);
   } catch (error) {
-    console.error("Chat route error:", error);
+    console.error("Internal Server Error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
